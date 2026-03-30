@@ -90,7 +90,7 @@
                 { id: 'experience', title: 'Qual é a sua experiência com o inglês?', type: 'checkbox', name: 'experience', options: ['Fiz curso de inglês no passado', 'Já viajei pra fora e usei inglês na prática', 'Estudei sozinho(a), com apps ou vídeos', 'Já fiz aula particular', 'Estudei na escola, mas faz tempo', 'Nunca estudei inglês'] },
                 { id: 'englishLevel', title: 'Como você considera seu nível atual de inglês?', subtitle: 'Escolha a opção que mais se aproxima de sua realidade', type: 'radio', name: 'englishLevel', options: [{ label: 'Não sei nada ou quase nada (Nível 0)', value: '0' }, { label: 'Básico: frases simples e dia a dia', value: 'basico' }, { label: 'Intermediário: me viro com ajuda', value: 'intermediario' }, { label: 'Avançado: converso com naturalidade', value: 'avancado' }] },
                 { id: 'reason', title: 'Por qual motivo você quer melhorar seu inglês?', type: 'radio', name: 'reason', options: [{ label: 'Desenvolvimento pessoal', value: 'pessoal' }, { label: 'Viagens', value: 'viagens' }, { label: 'Desenvolvimento profissional', value: 'profissional' }] },
-                { id: 'terms', title: 'Estou ciente que:', type: 'checkbox', name: 'terms', options: ['A preparação com os materiais é fundamental.', 'As práticas serão em grupo.', 'Vagas LIMITADAS (lista de espera).', 'As sessões serão gravadas.', 'Aceito receber contato via WhatsApp.'] }
+                { id: 'terms', title: 'Estou ciente que:', type: 'checkbox', name: 'terms', requireAll: true, options: ['A preparação com os materiais é fundamental.', 'As práticas serão em grupo.', 'Vagas LIMITADAS (lista de espera).', 'As sessões serão gravadas.', 'Aceito receber contato via WhatsApp.'] }
             ];
 
             const totalSteps = steps.length;
@@ -162,7 +162,12 @@
                         }
                     }
                 } else if (step.type === 'checkbox') {
-                    if (!formData[step.name] || formData[step.name].length === 0) {
+                    if (step.requireAll) {
+                        if (!formData[step.name] || formData[step.name].length !== step.options.length) {
+                            newErrors[step.name] = 'É obrigatório assinalar todas as opções para continuar.';
+                            isValid = false;
+                        }
+                    } else if (!formData[step.name] || formData[step.name].length === 0) {
                         newErrors[step.name] = 'Este campo é obrigatório. Selecione pelo menos uma opção.';
                         isValid = false;
                     }
@@ -193,7 +198,10 @@
                 const step = steps[index];
                 if (step.type === 'name') return formData.firstName.trim() !== '' && formData.lastName.trim() !== '';
                 if (step.type === 'input') return step.optional || formData[step.name].trim() !== '';
-                if (step.type === 'checkbox') return formData[step.name] && formData[step.name].length > 0;
+                if (step.type === 'checkbox') {
+                    if (step.requireAll) return formData[step.name] && formData[step.name].length === step.options.length;
+                    return formData[step.name] && formData[step.name].length > 0;
+                }
                 if (step.type === 'radio') return formData[step.name] && formData[step.name] !== '';
                 return false;
             };
